@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { HTTP_STATUS } from '~/constants/enums/httpStatus'
+import { MESSAGES } from '~/constants/enums/messages'
 import { TokenPayload } from '~/constants/interfaces/refreshTokens.interfaces'
 import {
   LoginPayload,
@@ -48,9 +49,58 @@ const refreshTokenController = async (
   res.status(HTTP_STATUS.OK).json(result)
 }
 
+const verifyEmailTokenController = async (
+  req: Request<ParamsDictionary, any, any>,
+  res: Response
+) => {
+  const { user_id } = req.decoded_email_verify_token as TokenPayload
+  const result = await userServices.verifyEmail(user_id)
+  res.status(HTTP_STATUS.OK).json(result)
+}
+
+const resendVerifyEmailTokenController = async (
+  req: Request<ParamsDictionary, any, any>,
+  res: Response
+) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  await userServices.resendVerifyEmail(user_id)
+  res.status(HTTP_STATUS.NOT_FOUND).json()
+}
+
+const forgotPasswordController = async (
+  req: Request<ParamsDictionary, any, any>,
+  res: Response
+) => {
+  const { email } = req.body
+  await userServices.forgotPassword(email)
+  res.status(HTTP_STATUS.NOT_FOUND).json()
+}
+
+const verifyForgotPasswordController = async (
+  req: Request<ParamsDictionary, any, any>,
+  res: Response
+) => {
+  res.status(HTTP_STATUS.OK).json({ message: MESSAGES.VERIFIED_SUCCESS })
+}
+
+const resetPasswordController = async (
+  req: Request<ParamsDictionary, any, any>,
+  res: Response
+) => {
+  const { user_id } = req.decoded_forgot_password_token as TokenPayload
+  const { password } = req.body
+  const result = await userServices.resetPassword(user_id, password)
+  res.status(HTTP_STATUS.OK).json(result)
+}
+
 export {
   registerController,
   loginController,
   logoutController,
-  refreshTokenController
+  refreshTokenController,
+  verifyEmailTokenController,
+  resendVerifyEmailTokenController,
+  forgotPasswordController,
+  verifyForgotPasswordController,
+  resetPasswordController
 }
