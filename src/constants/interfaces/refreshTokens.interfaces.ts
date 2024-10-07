@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { TokenType } from '../enums/users.enums'
+import { TokenType } from '~/constants/enums/users.enums'
 
 interface RefreshTokenType {
   _id?: ObjectId

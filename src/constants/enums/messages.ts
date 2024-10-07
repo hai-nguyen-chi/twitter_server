@@ -14,7 +14,8 @@ const MESSAGES = {
   PLEASE_ENTER_CONFIRM_PASSWORD: 'Please enter confirm password',
   PLEASE_ENTER_DATE_OF_BIRTH: 'Please enter date of birth',
   REFRESH_TOKEN_DO_NOT_EXIST: 'Refresh token do not exist',
-  VERIFIED_SUCCESS: 'Verified successfully'
+  VERIFIED_SUCCESS: 'Verified successfully',
+  USER_NOT_FOUND: 'User not found'
 } as const
 
 export { MESSAGES }

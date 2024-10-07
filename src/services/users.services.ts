@@ -16,6 +16,7 @@ import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { SignOptions } from 'jsonwebtoken'
 import { config } from 'dotenv'
 import { ObjectId } from 'mongodb'
+import Follower from '~/models/schemas/Follower.schema'
 
 config()
 
@@ -262,6 +263,61 @@ class UserServices {
       access_token,
       refresh_token
     }
+  }
+  async getProfile(user_id: string) {
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(user_id)
+    })
+    if (!user) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.NOT_FOUND,
+        message: MESSAGES.USER_NOT_FOUND
+      })
+    }
+    return user
+  }
+
+  async updateProfile(user_id: string, payload: any) {
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(user_id)
+    })
+    if (!user) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.NOT_FOUND,
+        message: MESSAGES.USER_NOT_FOUND
+      })
+    }
+    await databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          ...payload
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+  }
+
+  async follow(user_id: string, follower_user_id: string) {
+    const user = await databaseService.users.findOne({
+      user_id: new ObjectId(user_id),
+      follower_user_id: new ObjectId(follower_user_id)
+    })
+    if (!user) {
+      await databaseService.followers.insertOne(
+        new Follower({
+          user_id: new ObjectId(user_id),
+          follower_user_id: new ObjectId(follower_user_id)
+        })
+      )
+      return
+    }
+    await databaseService.followers.deleteOne({
+      user_id: new ObjectId(user_id),
+      follower_user_id: new ObjectId(follower_user_id)
+    })
   }
 }
 

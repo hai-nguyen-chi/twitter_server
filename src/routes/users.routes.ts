@@ -1,12 +1,15 @@
 import { Router } from 'express'
 import {
+  followerController,
   forgotPasswordController,
   loginController,
   logoutController,
+  profileController,
   refreshTokenController,
   registerController,
   resendVerifyEmailTokenController,
   resetPasswordController,
+  updateProfileController,
   verifyEmailTokenController
 } from '~/controllers/users.controllers'
 import {
@@ -60,5 +63,21 @@ usersRoute.post(
   '/reset_password',
   resetPasswordValidator,
   wrapHandler(resetPasswordController)
+)
+usersRoute.get(
+  '/profile/:user_id',
+  accessTokenValidator,
+  wrapHandler(profileController)
+)
+// check role
+usersRoute.patch(
+  '/profile/:user_id',
+  accessTokenValidator,
+  wrapHandler(updateProfileController)
+)
+usersRoute.put(
+  '/followers',
+  accessTokenValidator,
+  wrapHandler(followerController)
 )
 export default usersRoute

@@ -93,6 +93,34 @@ const resetPasswordController = async (
   res.status(HTTP_STATUS.OK).json(result)
 }
 
+const profileController = async (
+  req: Request<ParamsDictionary, any, any>,
+  res: Response
+) => {
+  const { user_id } = req.params
+  const result = await userServices.getProfile(user_id)
+  res.status(HTTP_STATUS.OK).json(result)
+}
+
+const updateProfileController = async (
+  req: Request<ParamsDictionary, any, any>,
+  res: Response
+) => {
+  const { user_id } = req.decoded_authorization as TokenPayload
+  await userServices.updateProfile(user_id, req.body)
+  res.status(HTTP_STATUS.NO_CONTENT).json()
+}
+
+const followerController = async (
+  req: Request<ParamsDictionary, any, any>,
+  res: Response
+) => {
+  const { follower_user_id } = req.body
+  const { user_id } = req.decoded_authorization as TokenPayload
+  await userServices.follow(user_id, follower_user_id)
+  res.status(HTTP_STATUS.NO_CONTENT).json()
+}
+
 export {
   registerController,
   loginController,
@@ -102,5 +130,8 @@ export {
   resendVerifyEmailTokenController,
   forgotPasswordController,
   verifyForgotPasswordController,
-  resetPasswordController
+  resetPasswordController,
+  profileController,
+  updateProfileController,
+  followerController
 }
