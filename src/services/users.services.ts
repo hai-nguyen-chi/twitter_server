@@ -1,6 +1,7 @@
 import User from '~/models/schemas/User.schema'
 import databaseService from './database.services'
 import {
+  ChangePasswordPayload,
   LoginPayload,
   LogoutPayload,
   RegisterPayload
@@ -287,12 +288,16 @@ class UserServices {
         message: MESSAGES.USER_NOT_FOUND
       })
     }
+    const _payload = payload.date_of_birth
+      ? {
+          ...payload,
+          date_of_birth: new Date(payload.date_of_birth)
+        }
+      : payload
     await databaseService.users.updateOne(
       { _id: new ObjectId(user_id) },
       {
-        $set: {
-          ...payload
-        },
+        $set: _payload,
         $currentDate: {
           updated_at: true
         }
@@ -301,7 +306,7 @@ class UserServices {
   }
 
   async follow(user_id: string, follower_user_id: string) {
-    const user = await databaseService.users.findOne({
+    const user = await databaseService.followers.findOne({
       user_id: new ObjectId(user_id),
       follower_user_id: new ObjectId(follower_user_id)
     })
@@ -318,6 +323,21 @@ class UserServices {
       user_id: new ObjectId(user_id),
       follower_user_id: new ObjectId(follower_user_id)
     })
+  }
+  async changePassword({ email, password }: ChangePasswordPayload) {
+    await databaseService.users.updateOne(
+      {
+        email: email
+      },
+      {
+        $set: {
+          password: sha256(password)
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
   }
 }
 
