@@ -121,6 +121,14 @@ const followerController = async (
   res.status(HTTP_STATUS.NO_CONTENT).json()
 }
 
+const oauthController = async (req: Request, res: Response) => {
+  const { code } = req.query
+  const result = await userServices.oauth(code as string)
+  const queryString = new URLSearchParams(result).toString()
+  const url = process.env.CLIENT_REDIRECT_CALLBACK + queryString
+  res.redirect(url)
+}
+
 export {
   registerController,
   loginController,
@@ -133,5 +141,6 @@ export {
   resetPasswordController,
   profileController,
   updateProfileController,
-  followerController
+  followerController,
+  oauthController
 }

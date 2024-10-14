@@ -17,6 +17,7 @@ import { SignOptions } from 'jsonwebtoken'
 import { config } from 'dotenv'
 import { ObjectId } from 'mongodb'
 import Follower from '~/models/schemas/Follower.schema'
+import axios from 'axios'
 
 config()
 
@@ -207,6 +208,7 @@ class UserServices {
     )
     const [access_token, refresh_token] =
       await this.signAccessTokenAndRefreshToken(user_id)
+    await this.createRefreshToken({ token: refresh_token, user_id: user_id })
     return { access_token, refresh_token }
   }
 
@@ -223,7 +225,7 @@ class UserServices {
         }
       }
     )
-    console.log(verifyEmailToken)
+    console.log('email_verify_token: ', verifyEmailToken)
   }
 
   async forgotPassword(email: string) {
@@ -242,7 +244,7 @@ class UserServices {
         }
       }
     )
-    console.log(forgotPasswordToken)
+    console.log('forgot_password_token: ', forgotPasswordToken)
   }
   async resetPassword(user_id: string, password: string) {
     await databaseService.users.updateOne(
@@ -259,6 +261,7 @@ class UserServices {
     )
     const [access_token, refresh_token] =
       await this.signAccessTokenAndRefreshToken(user_id)
+    await this.createRefreshToken({ token: refresh_token, user_id: user_id })
     return {
       access_token,
       refresh_token
@@ -318,6 +321,56 @@ class UserServices {
       user_id: new ObjectId(user_id),
       follower_user_id: new ObjectId(follower_user_id)
     })
+  }
+  async oauth(code: string) {
+    const response = await axios.post(
+      'https://accounts.google.com/o/oauth2/token',
+      {
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+        grant_type: 'authorization_code'
+      },
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    )
+    const { access_token, id_token } = response.data
+    const userInfo = await axios.get(
+      'https://openidconnect.googleapis.com/v1/userinfo',
+      {
+        params: {
+          access_token,
+          alt: 'json'
+        },
+        headers: {
+          Authorization: `Bearer ${id_token}`
+        }
+      }
+    )
+    const { name, picture, email, email_verified } = userInfo.data
+    const user = await this.checkEmailExist(email)
+    if (user) {
+      const [access_token, refresh_token] =
+        await this.signAccessTokenAndRefreshToken(user._id.toString())
+      await this.createRefreshToken({
+        token: refresh_token,
+        user_id: user._id.toString()
+      })
+      return { access_token, refresh_token }
+    }
+    const passwordRandom = Math.random().toString(36).slice(5, 15)
+    const result = await this.register({
+      name,
+      email,
+      password: passwordRandom,
+      confirm_password: passwordRandom,
+      date_of_birth: new Date().toISOString()
+    })
+    return result
   }
 }
 

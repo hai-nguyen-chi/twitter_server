@@ -4,6 +4,7 @@ import {
   forgotPasswordController,
   loginController,
   logoutController,
+  oauthController,
   profileController,
   refreshTokenController,
   registerController,
@@ -80,4 +81,5 @@ usersRoute.put(
   accessTokenValidator,
   wrapHandler(followerController)
 )
+usersRoute.get('/oauth/google', wrapHandler(oauthController))
 export default usersRoute
